@@ -1,0 +1,89 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+body.light {
+  background: #f0f4f8;
+  color: #000;
+}
+
+body.dark {
+  background: #121212;
+  color: #fff;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+}
+
+.stopwatch {
+  background: #fff;
+  color: #000;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  width: 320px;
+  transition: background 0.3s, color 0.3s;
+}
+
+body.dark .stopwatch {
+  background: #333;
+  color: #fff;
+}
+
+.time {
+  font-size: 48px;
+  margin-bottom: 20px;
+  letter-spacing: 2px;
+}
+
+.buttons button {
+  margin: 5px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.start { background-color: #4caf50; color: white; }
+.pause { background-color: #ff9800; color: white; }
+.reset { background-color: #f44336; color: white; }
+.lap { background-color: #2196f3; color: white; }
+.export { background-color: #9c27b0; color: white; }
+
+.laps {
+  margin-top: 20px;
+  text-align: left;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.laps ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.laps li {
+  background: #e3f2fd;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+body.dark .laps li {
+  background: #555;
+}

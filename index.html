@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" sizes="192x192" />
+<meta name="theme-color" content="#4caf50" />
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Stopwatch</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="light">
+
+  <div class="theme-toggle">
+    <label>
+      <input type="checkbox" id="themeSwitcher" /> Dark Mode
+    </label>
+  </div>
+
+  <div class="stopwatch">
+    <div class="time" id="display">00:00:00.000</div>
+    <div class="buttons">
+      <button class="start" onclick="startTimer()">Start</button>
+      <button class="pause" onclick="pauseTimer()">Pause</button>
+      <button class="reset" onclick="resetTimer()">Reset</button>
+      <button class="lap" onclick="recordLap()">Lap</button>
+      <button class="export" onclick="exportLaps()">Export</button>
+    </div>
+    <div class="laps">
+      <h4>Laps:</h4>
+      <ul id="lapList"></ul>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
