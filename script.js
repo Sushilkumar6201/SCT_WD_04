@@ -1,103 +1,131 @@
-// script.js
-let startTime = 0;
-let elapsedTime = 0;
-let timerInterval;
-let isRunning = false;
-let lapSound = new Audio('lap-sound.mp3');
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
 
-// Load saved settings on page load
-window.onload = () => {
-  const savedLaps = JSON.parse(localStorage.getItem("laps"));
-  if (savedLaps) {
-    savedLaps.forEach(lap => {
-      appendLap(lap);
-    });
-  }
-  const darkMode = localStorage.getItem("theme") === "dark";
-  document.body.classList.toggle("dark", darkMode);
-  document.body.classList.toggle("light", !darkMode);
-  document.getElementById("themeSwitcher").checked = darkMode;
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(console.error);
-  }
-};
+document.addEventListener("DOMContentLoaded", () => {
+  renderTasks();
+  requestNotificationPermission();
+  setInterval(checkForReminders, 60000); // every minute
+  loadTheme();
 
-function updateDisplay() {
-  const currentTime = Date.now() - startTime + elapsedTime;
-  const milliseconds = currentTime % 1000;
-  const seconds = Math.floor((currentTime / 1000) % 60);
-  const minutes = Math.floor((currentTime / 60000) % 60);
-  const hours = Math.floor((currentTime / 3600000));
-
-  document.getElementById('display').textContent =
-    `${String(hours).padStart(2, '0')}:` +
-    `${String(minutes).padStart(2, '0')}:` +
-    `${String(seconds).padStart(2, '0')}.` +
-    `${String(milliseconds).padStart(3, '0')}`;
-}
-
-function startTimer() {
-  if (!isRunning) {
-    startTime = Date.now();
-    timerInterval = setInterval(updateDisplay, 10);
-    isRunning = true;
-  }
-}
-
-function pauseTimer() {
-  if (isRunning) {
-    clearInterval(timerInterval);
-    elapsedTime += Date.now() - startTime;
-    isRunning = false;
-  }
-}
-
-function resetTimer() {
-  clearInterval(timerInterval);
-  startTime = 0;
-  elapsedTime = 0;
-  isRunning = false;
-  document.getElementById('display').textContent = '00:00:00.000';
-  document.getElementById('lapList').innerHTML = '';
-  localStorage.removeItem("laps");
-}
-
-function recordLap() {
-  if (!isRunning) return;
-  const lapTime = document.getElementById('display').textContent;
-  appendLap(lapTime);
-  lapSound.play();
-
-  let savedLaps = JSON.parse(localStorage.getItem("laps")) || [];
-  savedLaps.push(lapTime);
-  localStorage.setItem("laps", JSON.stringify(savedLaps));
-}
-
-function appendLap(lapTime) {
-  const lapList = document.getElementById('lapList');
-  const lapItem = document.createElement('li');
-  lapItem.textContent = `Lap ${lapList.children.length + 1}: ${lapTime}`;
-  lapList.appendChild(lapItem);
-}
-
-function exportLaps() {
-  const lapItems = document.querySelectorAll('#lapList li');
-  if (!lapItems.length) return alert("No laps to export!");
-
-  const lapText = Array.from(lapItems).map(item => item.textContent).join('\n');
-  const blob = new Blob([lapText], { type: 'text/plain' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'lap_times.txt';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-// Theme switcher
-document.getElementById("themeSwitcher").addEventListener("change", function () {
-  const isDark = this.checked;
-  document.body.classList.toggle("dark", isDark);
-  document.body.classList.toggle("light", !isDark);
-  localStorage.setItem("theme", isDark ? "dark" : "light");
+  document.getElementById('theme-toggle').onclick = toggleTheme;
 });
+
+function addTask() {
+  const title = document.getElementById('task-title').value.trim();
+  const time = document.getElementById('task-time').value;
+  const category = document.getElementById('task-category').value.trim();
+
+  if (!title) {
+    alert("Task title cannot be empty!");
+    return;
+  }
+
+  tasks.push({ title, time, category, completed: false, notified: false });
+  saveTasks();
+  clearInputs();
+  renderTasks();
+}
+
+function clearInputs() {
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-time').value = '';
+  document.getElementById('task-category').value = '';
+}
+
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  list.innerHTML = "";
+
+  tasks.forEach((task, index) => {
+    const li = document.createElement("li");
+
+    const title = document.createElement("span");
+    title.className = "task-title" + (task.completed ? " completed" : "");
+    title.innerText = `${task.title} (${task.category || "No Category"}) - ${task.time || "No time"}`;
+
+    const actions = document.createElement("div");
+    actions.className = "task-actions";
+
+    const completeBtn = document.createElement("button");
+    completeBtn.innerText = task.completed ? "Undo" : "Done";
+    completeBtn.onclick = () => toggleComplete(index);
+
+    const editBtn = document.createElement("button");
+    editBtn.innerText = "Edit";
+    editBtn.onclick = () => editTask(index);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.innerText = "Delete";
+    deleteBtn.onclick = () => deleteTask(index);
+
+    actions.append(completeBtn, editBtn, deleteBtn);
+    li.append(title, actions);
+    list.appendChild(li);
+  });
+}
+
+function toggleComplete(index) {
+  tasks[index].completed = !tasks[index].completed;
+  saveTasks();
+  renderTasks();
+}
+
+function deleteTask(index) {
+  tasks.splice(index, 1);
+  saveTasks();
+  renderTasks();
+}
+
+function editTask(index) {
+  const newTitle = prompt("Edit Task Title:", tasks[index].title);
+  if (newTitle !== null) tasks[index].title = newTitle.trim() || tasks[index].title;
+
+  const newTime = prompt("Edit Date/Time:", tasks[index].time);
+  if (newTime !== null) tasks[index].time = newTime;
+
+  const newCategory = prompt("Edit Category:", tasks[index].category);
+  if (newCategory !== null) tasks[index].category = newCategory.trim();
+
+  saveTasks();
+  renderTasks();
+}
+
+function requestNotificationPermission() {
+  if ("Notification" in window) {
+    Notification.requestPermission();
+  }
+}
+
+function checkForReminders() {
+  if (Notification.permission !== "granted") return;
+
+  const now = new Date().toISOString().slice(0, 16); // yyyy-MM-ddTHH:mm
+  tasks.forEach((task, index) => {
+    if (
+      task.time &&
+      task.time.slice(0, 16) === now &&
+      !task.notified &&
+      !task.completed
+    ) {
+      new Notification("Task Reminder", {
+        body: `${task.title} (${task.category || "No Category"}) is due now!`
+      });
+      tasks[index].notified = true;
+      saveTasks();
+    }
+  });
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+}
+
+function loadTheme() {
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark");
+  }
+}
